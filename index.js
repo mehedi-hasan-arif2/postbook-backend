@@ -12,19 +12,23 @@ app.use(cors());
 app.use(express.json());
 
 // Clever Cloud MySQL database connection
-const db = mysql.createConnection({
+const db = mysql.createPool({
     host: "bwikb3gj9wva2xsnblei-mysql.services.clever-cloud.com",     
     user: "umqflj1ucaz6j5ul",                   
     password: "6IjEt8QePsp8NRfu25UD",                 
     database: "bwikb3gj9wva2xsnblei",               
-    port: 3306                               
+    port: 3306,
+    waitForConnections: true,
+    connectionLimit: 10,
+    queueLimit: 0
 });
 
-db.connect((err) => {
+db.getConnection((err, connection) => {
     if (err) {
-        console.error("Cloud MySQL server connection error:", err);
+        console.error("Cloud MySQL connection error:", err);
     } else {
         console.log("Connected to Clever Cloud MySQL successfully!");
+        connection.release(); 
     }
 });
 
