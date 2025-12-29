@@ -1,23 +1,21 @@
-require('dotenv').config();
+require('dotenv').config(); 
 
 const express = require('express');
 const mysql = require('mysql2'); 
 const cors = require('cors');
 
-// Render-server port
 const port = process.env.PORT || 5000; 
-
 const app = express();
 
-// middlewares
+// CORS Settings: 
 app.use(cors({
-    origin: ["https://postbook-web.vercel.app", "http://127.0.0.1:5502"], 
+    origin: ["https://postbook-web.vercel.app", "http://127.0.0.1:5502", "http://localhost:5502"], 
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true
 }));
 app.use(express.json());
 
-// Clever Cloud MySQL database connection
+// database connection 
 const db = mysql.createPool({
     host: process.env.DB_HOST,    
     user: process.env.DB_USER, 
@@ -29,15 +27,15 @@ const db = mysql.createPool({
     queueLimit: 0
 });
 
+// কানেকশন চেক (Console এ দেখবে কানেক্ট হয়েছে কি না)
 db.getConnection((err, connection) => {
     if (err) {
-        console.error("Cloud MySQL connection error:", err);
+        console.error("Database connection failed:", err.message);
     } else {
         console.log("Connected to Clever Cloud MySQL successfully!");
         connection.release(); 
     }
 });
-
   //getting user data from server
 
   // register route
