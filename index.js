@@ -1,3 +1,5 @@
+require('dotenv').config();
+
 const express = require('express');
 const mysql = require('mysql2'); 
 const cors = require('cors');
@@ -17,10 +19,10 @@ app.use(express.json());
 
 // Clever Cloud MySQL database connection
 const db = mysql.createPool({
-    host: "bwikb3gj9wva2xsnblei-mysql.services.clever-cloud.com",     
-    user: "umqflj1ucaz6j5ul",                   
-    password: "6IjEt8QePsp8NRfu25UD",                 
-    database: "bwikb3gj9wva2xsnblei",               
+    host: process.env.DB_HOST,    
+    user: process.env.DB_USER, 
+    password: process.env.DB_PASS, 
+    database: process.env.DB_NAME, 
     port: 3306,
     waitForConnections: true,
     connectionLimit: 10,
@@ -125,12 +127,11 @@ app.post("/postComment" , (req, res) => {
 // adding new post
 app.post('/addNewPost', (req, res) => {
     const { postedUserId, postedTime, postText, postImageUrl } = req.body;
-    if (!postText) return res.status(400).json({ message: "Post cannot be empty" });
-    let sql = "INSERT INTO posts (postedUserId, postedTime, postText, postImageUrl) VALUES (?, ?, ?, ?)";
+    const sql = "INSERT INTO posts (postedUserId, postedTime, postText, postImageUrl) VALUES (?, ?, ?, ?)";
     db.query(sql, [postedUserId, postedTime, postText, postImageUrl], (err, result) => {
         if (err) {
-            console.error("Database Error:", err);
-            return res.status(500).json({ success: false, error: err.message });
+            console.error("Database Error Detail:", err); 
+            return res.status(500).json({ success: false, message: err.message });
         }
         res.status(200).json({ success: true, result });
     });
