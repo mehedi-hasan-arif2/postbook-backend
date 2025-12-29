@@ -1,41 +1,37 @@
-require('dotenv').config(); 
-
 const express = require('express');
 const mysql = require('mysql2'); 
 const cors = require('cors');
 
+// Render-server port
 const port = process.env.PORT || 5000; 
+
 const app = express();
 
-// CORS Settings: 
-app.use(cors({
-    origin: ["https://postbook-web.vercel.app", "http://127.0.0.1:5502", "http://localhost:5502"], 
-    methods: ["GET", "POST", "PUT", "DELETE"],
-    credentials: true
-}));
+// middlewares
+app.use(cors());
 app.use(express.json());
 
-// database connection 
+// Clever Cloud MySQL database connection
 const db = mysql.createPool({
-    host: process.env.DB_HOST,    
-    user: process.env.DB_USER, 
-    password: process.env.DB_PASS, 
-    database: process.env.DB_NAME, 
+    host: "bwikb3gj9wva2xsnblei-mysql.services.clever-cloud.com",     
+    user: "umqflj1ucaz6j5ul",                   
+    password: "6IjEt8QePsp8NRfu25UD",                 
+    database: "bwikb3gj9wva2xsnblei",               
     port: 3306,
     waitForConnections: true,
     connectionLimit: 10,
     queueLimit: 0
 });
 
-// কানেকশন চেক (Console এ দেখবে কানেক্ট হয়েছে কি না)
 db.getConnection((err, connection) => {
     if (err) {
-        console.error("Database connection failed:", err.message);
+        console.error("Cloud MySQL connection error:", err);
     } else {
         console.log("Connected to Clever Cloud MySQL successfully!");
         connection.release(); 
     }
 });
+
   //getting user data from server
 
   // register route
@@ -124,15 +120,24 @@ app.post("/postComment" , (req, res) => {
 
 // adding new post
 app.post('/addNewPost', (req, res) => {
-    const { postedUserId, postedTime, postText, postImageUrl } = req.body;
-    const sql = "INSERT INTO posts (postedUserId, postedTime, postText, postImageUrl) VALUES (?, ?, ?, ?)";
-    db.query(sql, [postedUserId, postedTime, postText, postImageUrl], (err, result) => {
-        if (err) {
-            console.error("Database Error Detail:", err); 
-            return res.status(500).json({ success: false, message: err.message });
-        }
-        res.status(200).json({ success: true, result });
-    });
+//destructure the req.body object
+  const { postedUserId, postedTime, postText, postImageUrl } = req.body;
+  if (!postText || postText.trim() === "") {
+    return res.status(400).json({ message: "Post cannot be empty" });
+  }
+
+//sql query
+  let sqlForAddingNewPost = `INSERT INTO posts (postId, postedUserId, postedTime, postText, postImageUrl) VALUES (NULL, ?, ?, ?, ?)`;
+
+  let query = db.query(sqlForAddingNewPost, [postedUserId, postedTime, postText, postImageUrl], (err, result) => {
+    if (err) {
+      console.log("Error while adding a new post in the database: ", err);
+      throw err;
+    }
+    else{
+      res.send(result);
+    }
+  });
 });
 
 //Post Edit,Delete option
