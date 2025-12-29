@@ -8,7 +8,11 @@ const port = process.env.PORT || 5000;
 const app = express();
 
 // middlewares
-app.use(cors());
+app.use(cors({
+    origin: ["https://postbook-web.vercel.app", "http://127.0.0.1:5502"], 
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    credentials: true
+}));
 app.use(express.json());
 
 // Clever Cloud MySQL database connection
@@ -120,24 +124,16 @@ app.post("/postComment" , (req, res) => {
 
 // adding new post
 app.post('/addNewPost', (req, res) => {
-//destructure the req.body object
-  const { postedUserId, postedTime, postText, postImageUrl } = req.body;
-  if (!postText || postText.trim() === "") {
-    return res.status(400).json({ message: "Post cannot be empty" });
-  }
-
-//sql query
-  let sqlForAddingNewPost = `INSERT INTO posts (postId, postedUserId, postedTime, postText, postImageUrl) VALUES (NULL, ?, ?, ?, ?)`;
-
-  let query = db.query(sqlForAddingNewPost, [postedUserId, postedTime, postText, postImageUrl], (err, result) => {
-    if (err) {
-      console.log("Error while adding a new post in the database: ", err);
-      throw err;
-    }
-    else{
-      res.send(result);
-    }
-  });
+    const { postedUserId, postedTime, postText, postImageUrl } = req.body;
+    if (!postText) return res.status(400).json({ message: "Post cannot be empty" });
+    let sql = "INSERT INTO posts (postedUserId, postedTime, postText, postImageUrl) VALUES (?, ?, ?, ?)";
+    db.query(sql, [postedUserId, postedTime, postText, postImageUrl], (err, result) => {
+        if (err) {
+            console.error("Database Error:", err);
+            return res.status(500).json({ success: false, error: err.message });
+        }
+        res.status(200).json({ success: true, result });
+    });
 });
 
 //Post Edit,Delete option
